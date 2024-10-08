@@ -1,67 +1,3 @@
-// const socket = io();
-// const canvasElement = document.getElementById('drawingCanvas');
-// paper.setup(canvasElement);
-
-// let userColor = getRandomColor();
-// document.getElementById('userColor').style.backgroundColor = userColor;
-
-// let path;
-
-// // Start drawing when the mouse is pressed
-// canvasElement.addEventListener('mousedown', (event) => {
-//     const point = new paper.Point(event.offsetX, event.offsetY);
-//     path = new paper.Path();
-//     path.strokeColor = userColor;
-//     path.add(point);
-    
-//     canvasElement.addEventListener('mousemove', onMouseMove);
-// });
-
-// // Stop drawing when the mouse is released
-// canvasElement.addEventListener('mouseup', () => {
-//     canvasElement.removeEventListener('mousemove', onMouseMove);
-// });
-
-// // Drawing function for mouse move
-// function onMouseMove(event) {
-//     const point = new paper.Point(event.offsetX, event.offsetY);
-//     path.add(point);
-
-//     // Send draw data to other clients
-//     socket.emit('draw', {
-//         point: [event.offsetX, event.offsetY],  // Sending coordinates
-//         color: userColor
-//     });
-// }
-
-// // Handle draw event from other users
-// socket.on('draw', (data) => {
-//     const point = new paper.Point(data.point[0], data.point[1]);
-//     const otherPath = new paper.Path();
-//     otherPath.strokeColor = data.color;
-//     otherPath.add(point);
-// });
-
-// // Clear button
-// document.getElementById('clearBtn').addEventListener('click', () => {
-//     paper.project.clear();
-//     socket.emit('clear');
-// });
-
-// // Clear event from other users
-// socket.on('clear', () => {
-//     paper.project.clear();
-// });
-
-// // Function to generate random colors for users
-// function getRandomColor() {
-//     const letters = '0123456789ABCDEF';
-//     let color = '#';
-//     for (let i = 0; i < 6; i++) {
-//         color += letters[Math.floor(Math.random() * 16)];
-//     }
-//     return color;
-// }
 document.addEventListener("DOMContentLoaded", function () {
     const socket = io();
 
@@ -71,13 +7,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //list of predefined colors
     const colors = [
-        { name: "Red", hex: "#FF0000" },
-        { name: "Green", hex: "#008000" },
-        { name: "Blue", hex: "#0000FF" },
-        { name: "Yellow", hex: "#FFFF00" },
-        { name: "Purple", hex: "#800080" },
-        { name: "Teal", hex: "#008080" },
-        { name: "Orange", hex: "#FFA500" }
+        { name: "red", hex: "#FF0000" },
+        { name: "green", hex: "#00FF00" },
+        { name: "blue", hex: "#0000FF" },
+        { name: "yellow", hex: "#FFFF00" },
+        { name: "orange", hex: "#FFA500" },
+        { name: "teal", hex: "#008080" },
+        { name: "purple", hex: "#800080" },
+        { name: "pink", hex: "#FFC0CB" },
+        { name: "brown", hex: "#A52A2A" },
+        { name: "grey", hex: "#808080" },
+        { name: "lime", hex: "#00FF00" },
+        { name: "cyan", hex: "#00FFFF" },
+        { name: "magenta", hex: "#FF00FF" },
+        { name: "gold", hex: "#FFD700" },
+        { name: "salmon", hex: "#FA8072" },
+        { name: "navy", hex: "#000080" },
+        { name: "indigo", hex: "#4B0082" },
+        { name: "violet", hex: "#EE82EE" },
     ];
 
     //function to randomly assign a color from the list
@@ -98,6 +45,15 @@ document.addEventListener("DOMContentLoaded", function () {
     //variables for drawing
     let isDrawing = false;
     let path;
+    let lastPoint; //to keep track of the last point for drawing
+
+    socket.on("assignColor", (color) => {
+        userColor = color; // Set the user's color
+        const colorBlockDisplay = document.getElementById('userColorBlock');
+        const colorNameDisplay = document.getElementById('userColorName');
+        colorBlockDisplay.style.backgroundColor = userColor;
+        colorNameDisplay.textContent = userColor; //displays color name
+    });
 
     //event listener for mousedown (start drawing)
     canvasElement.addEventListener("mousedown", (event) => {
@@ -106,12 +62,13 @@ document.addEventListener("DOMContentLoaded", function () {
         path = new paper.Path();
         path.strokeColor = userColor.hex;
         path.add(point);
+        lastPoint = point; //initializes the last point
 
         //sends drawing data to the server
         socket.emit("draw", {
             color: userColor.hex,
-            from: { x: event.offsetX, y: event.offsetY },
-            to: { x: event.offsetX, y: event.offsetY }
+            from: { x: point.x, y: point.y },
+            to: { x: point.x, y: point.y } //uses the initial point for `to`
         });
     });
 
@@ -121,13 +78,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const point = new paper.Point(event.offsetX, event.offsetY);
         path.add(point);
+        path.strokeWidth = 2;
 
         //sends drawing data to the server
         socket.emit("draw", {
             color: userColor.hex,
-            from: { x: event.offsetX, y: event.offsetY },
-            to: { x: event.offsetX, y: event.offsetY }
+            from: { x: lastPoint.x, y: lastPoint.y }, //previous point
+            to: { x: point.x, y: point.y } //current point
         });
+        lastPoint = point; //updates the last point
     });
 
     //event listener for mouseup (stop drawing)
@@ -151,12 +110,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const clearButton = document.getElementById("clearBtn");
     clearButton.addEventListener("click", function () {
         paper.project.activeLayer.removeChildren();
-        socket.emit("clearCanvas"); // Notify all users
+        socket.emit("clearCanvas"); //notifies all users
     });
 
     //listen for canvas clearing from the server
     socket.on("clearCanvas", () => {
-        paper.project.activeLayer.removeChildren(); // Clear all drawings
+        paper.project.activeLayer.removeChildren(); //clears all drawings
         paper.view.draw();
     });
 });
