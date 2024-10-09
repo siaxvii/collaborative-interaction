@@ -5,29 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Collaborative Drawing Tool</title>
     <style>
+       body {
+            display: flex;
+            justify-content: center;
+            align-items: center;  
+            height: 100vh;         
+            margin: 0;               
+            flex-direction: column;   
+        }
         canvas {
             border: 1px solid black;
             cursor: crosshair;
         }
-        #color-indicator {
-            margin-top: 10px;
-            padding: 5px;
-            font-size: 18px;
+        #controls {
+            display: flex;               
+            justify-content: space-between; 
+            align-items: center;         
+            width: 800px;               
+            margin-top: 10px;           
+        }
+        #colorDisplay {
+            display: flex;               
+            align-items: center;   
+            font-weight: bolder;
         }
         #userColorBlock {
             width: 20px;
             height: 20px;
             display: inline-block;
+            margin-left: 5px;
+            margin-right: 5px;          
+        }
+        #userList {
+            margin-top: 10px;           
+            text-align: left;           
+            width: 800px;               
+        }
+        #clearBtn {
+            padding: 10px 20px;   
+            font-size: 16px;     
+            border-radius: 5px;
+            cursor: pointer;     
+            background-color:dimgray;
+            color: white;       
+            border:black;        
+            transition: background-color 0.3s, transform 0.2s;  
+        }
+
+        #clearBtn:hover {
+            background-color: #45a049;
+            transform: scale(1.05); 
         }
     </style>
 </head>
 <body>
     <canvas id="drawingCanvas" width="800" height="600"></canvas>
-    <button id="clearBtn">Clear</button>
-    <div>
-        <span>Your Color: </span>
-        <span id="userColorBlock"></span>
-        <span id="userColorName"></span>
+    <div id="controls">
+        <div id="colorDisplay">
+            <span >Your Color: </span>
+            <span id="userColorBlock"></span>
+            <span id="userColorName"></span>
+        </div>
+        <button id="clearBtn">Clear</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>

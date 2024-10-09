@@ -7,6 +7,13 @@ const io = socketIO(server);
 
 app.use(express.static("public")); //serve static files from the "public" directory
 
+const colors = [
+    "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FFA500",
+    "#008080", "#800080", "#FFC0CB", "#A52A2A", "#808080",
+    "#00FFFF", "#FF00FF", "#FFD700", "#FA8072", "#000080",
+    "#4B0082", "#EE82EE",
+];
+
 let usedColors = new Set();
 
 //handles user connection
