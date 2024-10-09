@@ -1,11 +1,13 @@
 const express = require("express");
 const http = require("http");
 const socketIO = require("socket.io");
+const path = require("path");
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-app.use(express.static("public")); //serve static files from the "public" directory
+//serves static files from the "public" directory
+app.use(express.static(path.join(__dirname, "public")));
 
 const colors = [
     "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FFA500",
@@ -14,11 +16,11 @@ const colors = [
     "#4B0082", "#EE82EE",
 ];
 
-let usedColors = new Set();
+let usedColors = new Set(); //tracks assigned colors
 
 //handles user connection
 io.on("connection", (socket) => {
-    console.log("A user connected");
+    console.log("A user connected:", socket.id);
 
     //assigns a unique color to the user
     let userColor;
@@ -30,11 +32,22 @@ io.on("connection", (socket) => {
         }
     }
 
+    //handles case when all colors are used
+    if (!userColor) {
+        //assigns a random color if all predefined colors are used
+        userColor = colors[Math.floor(Math.random() * colors.length)];
+        console.log("All predefined colors used. Assigning random color:", userColor);
+    }
+
+    //sends the assigned color to the connected user
     socket.emit("assignColor", userColor);
+
+    //notifies all users about the new user and their color
+    socket.broadcast.emit("userJoined", { color: userColor });
 
     //listens for drawing data from the client
     socket.on("draw", (data) => {
-        // Broadcast drawing data to all other users
+        //broadcasts drawing data to all other users
         socket.broadcast.emit("draw", data);
     });
 
@@ -45,13 +58,16 @@ io.on("connection", (socket) => {
 
     //handles user disconnect
     socket.on("disconnect", () => {
-        console.log("A user disconnected");
+        console.log("A user disconnected:", socket.id);
+        //removes the user's color from used colors when they disconnect
         if (userColor) {
             usedColors.delete(userColor);
         }
     });
 });
 
-server.listen(3000, () => {
-    console.log("Server is running on port 3000");
+//uses port that Heroku provides, or defaults to 3000
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
